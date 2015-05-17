@@ -7,7 +7,7 @@ struct FLOAT
 {
 	unsigned long long f; // fraction
 	int e; // exponent
-	short s; // sign
+	int s; // sign
 };
 
 FLOAT add(FLOAT v, FLOAT u);
@@ -33,18 +33,6 @@ int main()
 	std::cout << std::hex << w.f << " " << w.e << std::endl;
 
 	OutputDecimal(w);
-
-#if 0
-	// Test 10 + 0.1 (in decimal this is u = 2.0, v = 0.5)
-	// Output should be 10.1 or f = 0x50000000, e = 0x1 
-	FloatingPoint(
-		0x40000000,
-		0x1,
-		0x40000000,
-		-0x1
-	);
-#endif
-
 
 	return 0;
 }
@@ -82,8 +70,7 @@ FLOAT add(FLOAT v, FLOAT u)
 		w.f = u.f;
 	}
 
-
-#if 0
+#if 0 //TODO(Ashkan): Not sure if this is necessary
 	if(w.f == 0)
 	{
 		return w;
@@ -93,14 +80,14 @@ FLOAT add(FLOAT v, FLOAT u)
 	// Below this line is the normalization process:
 
 	// Shift right once if most significant digit is 1
-	if((w.f & 0x80000000) == 0x80000000)
+	if((w.f & 0x8000000000000000) == 0x8000000000000000)
 	{
 		w.f = w.f >> 1;
 		++w.e;
 	}
 	
 	// Shift left until second to most significant bit is not 0
-	while(w.f & 0x40000000 != 0x40000000)
+	while(w.f & 0x4000000000000000 != 0x4000000000000000)
 	{
 		w.f <<= 1;
 		--w.e;
@@ -157,7 +144,7 @@ void OutputDecimal(FLOAT w)
 	std::cout << std::dec << leftResult << "." << rightResult << std::endl;
 }
 
-//TODO: ascii to float
+//TODO: ascii to FLOAT
 void atof(char* input)
 {
 	int left_count = 0;
