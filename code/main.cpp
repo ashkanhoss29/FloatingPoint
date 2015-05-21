@@ -10,6 +10,7 @@ struct FLOAT
 	int s; // sign
 };
 
+FLOAT mul(FLOAT v, FLOAT u);
 FLOAT add(FLOAT v, FLOAT u);
 void OutputDecimal(FLOAT w);
 
@@ -17,24 +18,72 @@ int main()
 {
 	FLOAT v, u;
 
+	// Test add
 	//Set u and v
-	u.f = 0x6c00000000000000;
+	u.f = 0x6c00000000000000; // 6.75
 	u.e = 0x2;
 	u.s = -1;
-	v.f = 0x4000000000000000;
-	v.s = 1;
+	v.f = 0x4000000000000000; // 0.5
 	v.e = -0x1;
+	v.s = 1;
 
 	FLOAT w = add(v, u);
 
+	std::cout << "Test add" << std::endl;
 	// Output the result in hex
 	if(w.s == -1)
 		std::cout << '-';
 	std::cout << std::hex << w.f << " " << w.e << std::endl;
 
+	// Output the result in dec
+	OutputDecimal(u);
+	OutputDecimal(v);
+	OutputDecimal(w);
+
+	// Test mul
+	u.f = 0x6c00000000000000; // 6.75
+	u.e = 0x2;
+	u.s = 1;
+	v.f = 0x4000000000000000; // 0.5
+	v.e = 0x1;
+	v.s = 1;
+
+	w = mul(u, v);
+
+	std::cout << std::endl << "Test mul" << std::endl;
+	OutputDecimal(u);
+	OutputDecimal(v);
 	OutputDecimal(w);
 
 	return 0;
+}
+
+FLOAT mul(FLOAT v, FLOAT u)
+{
+	FLOAT w;
+
+	// Shift out 0's to avoid overflow or precision loss
+	while((u.f & 1) == 0)
+	{
+		u.f = u.f >> 1;
+	}
+
+	while((v.f & 1) == 0)
+	{
+		v.f = v.f >> 1;
+	}
+
+	w.f = v.f * u.f;
+	w.e = (v.e + u.e);
+	w.s = v.s * u.s;
+
+	// Normalize
+	while((w.f & 0x4000000000000000) != 0x4000000000000000)
+	{
+		w.f <<= 1;
+	}
+
+	return w;
 }
 
 FLOAT add(FLOAT v, FLOAT u)
@@ -87,7 +136,7 @@ FLOAT add(FLOAT v, FLOAT u)
 	}
 	
 	// Shift left until second to most significant bit is not 0
-	while(w.f & 0x4000000000000000 != 0x4000000000000000)
+	while((w.f & 0x4000000000000000) != 0x4000000000000000)
 	{
 		w.f <<= 1;
 		--w.e;
@@ -109,6 +158,9 @@ void OutputDecimal(FLOAT w)
 	int factor = cE;
 	int rightFactor = 5;
 
+	if(factor < 0)
+		factor = 0;
+
 	// Convert from binary/hex to decimal
 	while(mask != 0x0)
 	{
@@ -129,6 +181,7 @@ void OutputDecimal(FLOAT w)
 		{
 			if((cF & mask) == mask)
 			{
+				rightResult = rightResult * 10;
 				rightResult = rightResult + (rightFactor / (1 << factor));
 			}
 
