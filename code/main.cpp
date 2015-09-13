@@ -10,55 +10,48 @@ struct FLOAT
 	int s; // sign
 };
 
-FLOAT mul(FLOAT v, FLOAT u);
-FLOAT add(FLOAT v, FLOAT u);
+FLOAT mul(FLOAT u, FLOAT v);
+FLOAT div(FLOAT u, FLOAT v);
+FLOAT add(FLOAT u, FLOAT v);
+FLOAT sub(FLOAT u, FLOAT v);
 void OutputDecimal(FLOAT w);
 
 int main()
 {
-	FLOAT v, u;
+	FLOAT u = //-6.75
+	{
+		0x6c00000000000000,
+		0x2,
+		-1
+	};
 
-	// Test add
-	//Set u and v
-	u.f = 0x6c00000000000000; // 6.75
-	u.e = 0x2;
-	u.s = -1;
-	v.f = 0x4000000000000000; // 0.5
-	v.e = -0x1;
-	v.s = 1;
-
-	FLOAT w = add(v, u);
+	FLOAT v = //0.5
+	{
+		0x4000000000000000,
+		-0x1,
+		1
+	};
 
 	std::cout << "Test add" << std::endl;
-	// Output the result in hex
-	if(w.s == -1)
-		std::cout << '-';
-	std::cout << std::hex << w.f << " " << w.e << std::endl;
-
 	// Output the result in dec
 	OutputDecimal(u);
 	OutputDecimal(v);
-	OutputDecimal(w);
+	OutputDecimal(add(v, u));
 
-	// Test mul
-	u.f = 0x6c00000000000000; // 6.75
-	u.e = 0x2;
-	u.s = 1;
-	v.f = 0x4000000000000000; // 0.5
-	v.e = 0x1;
-	v.s = 1;
-
-	w = mul(u, v);
+	std::cout << std::endl << "Test sub" << std::endl;
+	OutputDecimal(u);
+	OutputDecimal(v);
+	OutputDecimal(sub(u, v));
 
 	std::cout << std::endl << "Test mul" << std::endl;
 	OutputDecimal(u);
 	OutputDecimal(v);
-	OutputDecimal(w);
+	OutputDecimal(mul(u, v));
 
 	return 0;
 }
 
-FLOAT mul(FLOAT v, FLOAT u)
+FLOAT mul(FLOAT u, FLOAT v)
 {
 	FLOAT w;
 
@@ -74,7 +67,7 @@ FLOAT mul(FLOAT v, FLOAT u)
 	}
 
 	w.f = v.f * u.f;
-	w.e = (v.e + u.e);
+	w.e = v.e + u.e;
 	w.s = v.s * u.s;
 
 	// Normalize
@@ -86,7 +79,14 @@ FLOAT mul(FLOAT v, FLOAT u)
 	return w;
 }
 
-FLOAT add(FLOAT v, FLOAT u)
+FLOAT div(FLOAT u, FLOAT v)
+{
+	FLOAT w = {0, 0, 0};
+
+	return w;
+}
+
+FLOAT add(FLOAT u, FLOAT v)
 {
 	FLOAT w;
 
@@ -119,12 +119,11 @@ FLOAT add(FLOAT v, FLOAT u)
 		w.f = u.f;
 	}
 
-#if 0 //TODO(Ashkan): Not sure if this is necessary
+	// No normalization required if w.f = 0
 	if(w.f == 0)
 	{
 		return w;
 	}
-#endif
 
 	// Below this line is the normalization process:
 
@@ -143,6 +142,13 @@ FLOAT add(FLOAT v, FLOAT u)
 	}
 
 	return w;
+}
+
+FLOAT sub(FLOAT u, FLOAT v)
+{
+	v.s = v.s * -1;
+
+	return add(u, v);
 }
 
 void OutputDecimal(FLOAT w)
@@ -200,6 +206,45 @@ void OutputDecimal(FLOAT w)
 //TODO: ascii to FLOAT
 void atof(char* input)
 {
+#if 0
+	0.5   -> 0.1
+	0.25  -> 0.01
+	0.125 -> 0.001
+	0.625 -> 0.0001
+
+
+	Convert ascii to int
+
+	Loop:
+	Multiply by 2
+	Divide int by 1000... (number of 0's is number of digits in the ascii - loop count)
+		Loop: (num % 10 == 0)
+			num = num / 10;
+#endif
+
+	int result = 0;
+	int ascii_count = 0;
+	int factor = ascii_count;
+	int num = 0;
+	while(factor != 1)
+	{
+		num = num * 2;
+		int temp = num / factor;
+
+		if(temp != 0)
+			result = result | 1;
+
+		while(num % 10 == 0)
+		{
+			num = num / 10;
+		}
+
+		num = num % factor;
+		factor = factor / 10;
+		result = result << 1;
+	}
+
+
 	int left_count = 0;
 	int right_count = 0;
 	bool counting = false;
